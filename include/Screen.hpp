@@ -5,9 +5,9 @@
 #include <SFML/Window.hpp>
 #include <SFML/Audio.hpp>
 #include <SFML/Network.hpp>
-#include "QuickSort.hpp"
 #include "random.hpp"
 #include <iostream>
+#include <vector>
 
 class Screen{
     private:
@@ -15,6 +15,8 @@ class Screen{
         sf::RenderWindow* window;
         sf::VideoMode videoMode;
         sf::Event ev;
+        sf::Clock* clock;
+        sf::RectangleShape* bg;
 
         //mouse positions
         sf::Vector2i mousePosWindow;
@@ -28,6 +30,8 @@ class Screen{
         void initWindow();
         void initVector();
         
+
+        
     public:
         //cosntructor and destructor
         Screen();
@@ -39,12 +43,16 @@ class Screen{
         //functions
         void pollEvent();
         void updateMousePos();
+        void updateVector();
 
 
         void update();
 
         void renderVector();
         void render();
+
+        void QuickSort(std::vector<sf::RectangleShape>&, int, int);
+        int Partition(std::vector<sf::RectangleShape>&, int, int);
 
 
 };
