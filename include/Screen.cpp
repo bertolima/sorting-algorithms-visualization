@@ -4,6 +4,10 @@
 void Screen::initVariables(){
     this->window = nullptr;
     this->clock = new sf::Clock;
+    this->font.loadFromFile("./include/fonts/The Hoca.ttf");
+
+    this->quicksort = false;
+    this->ordered = false;
     
 }
 
@@ -28,10 +32,17 @@ void::Screen::initVector(){
     }
 }
 
+void Screen::initButtons(){
+    this->buttons["QuickSort"] = new Button(this->window->getSize().x/2.f - 75.f, 100, 150, 50,
+    &this->font, "QuickSort",
+     sf::Color(70, 70, 70, 200), sf::Color(150, 150, 150, 200), sf::Color(20, 20, 20, 200));
+}
+
 //constructor and destructor
 Screen::Screen(){
     this->initVariables();
     this->initWindow();
+    this->initButtons();
     this->initVector();
 }
 
@@ -69,25 +80,50 @@ void Screen::updateMousePos(){
 }
 
 void Screen::updateVector(){
-    this->QuickSort(this->lines, 0, static_cast<int>(this->lines.size()-1));
-    for (int i=0;i<this->lines.size();i++){
-        this->lines[i].setPosition((i*8), 576-this->lines[i].getSize().y);
-        std::cout<< this->lines[i].getSize().y << std::endl;
+    for(int i = 1;i<this->lines.size();i++){
+        if (this->lines[i-1].getSize().y < this->lines[i].getSize().y)
+            continue;
+        else{
+            this->QuickSort(this->lines, 0, static_cast<int>(this->lines.size()-1));
+            for (int i=0;i<this->lines.size();i++){
+                this->lines[i].setPosition((i*8), 576-this->lines[i].getSize().y);
+            
+            }
+        }
+    }   
+}
+
+void Screen::updateButtons(){
+    for (auto &it : this->buttons){
+        it.second->update(this->mousePosFloat);
     }
-    this->window->display();
+
+    if(this->buttons["QuickSort"]->isPressed()){
+        this->quicksort = true;
+    }
 }
 
 void Screen::update(){
     this->pollEvent();
     this->updateMousePos();
+    this->updateButtons();
+    
     this->updateVector();
 }
 
 
 void Screen::renderVector(){
-    for(auto it : this->lines){
-        this->window->draw(it);
+    if (this->quicksort == true){
+        for(auto it : this->lines){
+            this->window->draw(it);
+        }
     }
+}
+
+void Screen::renderButtons(){
+    if (quicksort == false)
+        this->buttons["QuickSort"]->render(this->window);
+    
 }
 
 
@@ -95,8 +131,9 @@ void Screen::render(){
     //clear old frames
     this->window->clear();
 
+
+    this->renderButtons();
     this->renderVector();
-    
 
     //show new frames
     this->window->display();
@@ -118,15 +155,9 @@ int Screen::Partition(std::vector<sf::RectangleShape> &v, int low, int high){
 
 void Screen::QuickSort(std::vector<sf::RectangleShape> &v, int low , int high){
     if (low < high){
-        int p = Partition(v, low, high);
         if(this->clock->getElapsedTime().asMilliseconds() > 1000.f){
+            int p = Partition(v, low, high);
             QuickSort(v, low, p-1);
-            this->window->clear();
-            this->renderVector();
-            this->window->display();
-            this->clock->restart();
-        }
-        if(clock->getElapsedTime().asMilliseconds() > 1000.f){
             QuickSort(v, p+1, high);
             this->window->clear();
             this->renderVector();

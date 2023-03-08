@@ -1,13 +1,13 @@
 #pragma once
 
-#include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
 #include <SFML/Window.hpp>
 #include <SFML/Audio.hpp>
 #include <SFML/Network.hpp>
 #include "random.hpp"
-#include <iostream>
 #include <vector>
+#include <map>
+#include "Button.hpp"
 
 class Screen{
     private:
@@ -25,10 +25,22 @@ class Screen{
         //vector
         std::vector<sf::RectangleShape> lines;
 
+        //buttons
+        std::map<std::string, Button*> buttons;
+
+        //font
+        sf::Font font;
+
+        //control variables
+        bool ordered;
+        bool quicksort;
+
+
         //private functions
         void initVariables();
         void initWindow();
         void initVector();
+        void initButtons();
         
 
         
@@ -44,11 +56,13 @@ class Screen{
         void pollEvent();
         void updateMousePos();
         void updateVector();
-
+        void updateButtons();
 
         void update();
 
         void renderVector();
+        void renderButtons();
+
         void render();
 
         void QuickSort(std::vector<sf::RectangleShape>&, int, int);
