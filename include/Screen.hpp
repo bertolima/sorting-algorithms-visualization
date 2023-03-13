@@ -8,6 +8,8 @@
 #include "Vector.hpp"
 #include <map>
 #include "Button.hpp"
+#include <thread>
+
 
 class Screen{
     private:
@@ -23,7 +25,7 @@ class Screen{
         sf::Vector2f mousePosFloat;
 
         //vector
-        std::vector<sf::RectangleShape> lines;
+        Vector *vector;
 
         //buttons
         std::map<std::string, Button*> buttons;
@@ -34,6 +36,7 @@ class Screen{
         //control variables
         bool ordered;
         bool quicksort;
+        bool startQuick;
 
 
         //private functions
