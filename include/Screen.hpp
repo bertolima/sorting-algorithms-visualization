@@ -11,7 +11,7 @@
 #include <thread>
 #include <iostream>
 
-enum sort_state{STATE_ZERO = 0, STATE_NONE, STATE_QUICK, STATE_BUBBLE};
+enum sort_state{STATE_ZERO = 0, STATE_NONE, STATE_QUICK, STATE_BUBBLE, STATE_MERGE};
 
 
 class Screen{
@@ -76,6 +76,8 @@ class Screen{
         void QuickSort(Vector&, int, int);
         int Partition(Vector&, int, int);
         void BubbleSort(Vector&, int);
+        void Merge(Vector& v, int left, int mid, int right);
+        void MergeSort(Vector& v, int left, int right);
 
 
 };

@@ -120,3 +120,7 @@ void Vector::setColor(int i, int j){
     }
     
 }
+
+void Vector::setElement(int i, sf::RectangleShape rec){
+    this->arr[i] = rec;
+}

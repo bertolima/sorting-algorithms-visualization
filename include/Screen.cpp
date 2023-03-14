@@ -41,6 +41,10 @@ void Screen::initButtons(){
     this->buttons["BubbleSort"] = new Button(this->window->getSize().x/2.f - 75.f, 200, 150, 50,
     &this->font, "BubbleSort",
      sf::Color(70, 70, 70, 200), sf::Color(150, 150, 150, 200), sf::Color(20, 20, 20, 200));
+    
+    this->buttons["MergeSort"] = new Button(this->window->getSize().x/2.f - 75.f, 300, 150, 50,
+    &this->font, "MergeSort",
+     sf::Color(70, 70, 70, 200), sf::Color(150, 150, 150, 200), sf::Color(20, 20, 20, 200));
 
 }
 
@@ -88,12 +92,17 @@ void Screen::updateVector(){
         case STATE_NONE:
             break;
         case STATE_QUICK:
-            this->QuickSort(*this->vector, 0 , static_cast<int>(this->vector->getSize()-1));
+            this->QuickSort(*this->vector,0 , static_cast<int>(this->vector->getSize()-1));
             this->sort_state == STATE_NONE;
             break;
         case STATE_BUBBLE:
             this->BubbleSort(*this->vector, static_cast<int>(this->vector->getSize()-1));
             this->sort_state == STATE_NONE;
+            break;
+        case STATE_MERGE:
+            this->MergeSort(*this->vector,0 , static_cast<int>(this->vector->getSize()-1));
+            this->vector->print();
+            this->sort_state = STATE_NONE;
             break;
     }  
 }
@@ -108,6 +117,10 @@ void Screen::updateButtons(){
     }
     if(this->buttons["BubbleSort"]->isPressed()){
         this->sort_state = STATE_BUBBLE;
+    }
+
+    if(this->buttons["MergeSort"]->isPressed()){
+        this->sort_state = STATE_MERGE;
     }
 }
 
@@ -248,6 +261,58 @@ void Screen::BubbleSort(Vector &v, int size){
             }
         }
     }
+}
+
+void Screen::Merge(Vector& v, int left, int mid, int right){
+    std::vector<sf::RectangleShape> vectorLeft;
+    std::vector<sf::RectangleShape> vectorRight;
+
+    auto const leftVector = mid - left + 1;
+    auto const rightVector = right - mid;
+
+    for (int i = 0; i < leftVector; i++){
+        vectorLeft.push_back(v.getElement(left + i));
+    }
+
+    for (int j = 0; j <rightVector; j++){
+        vectorRight.push_back(v.getElement(mid + 1 + j));
+    }
+
+    int i=0, j=0, k = left;
+
+    while(i < leftVector && j < rightVector){
+        if(vectorLeft[i].getSize().y <= vectorRight[j].getSize().y){
+            v.setElement(k, vectorLeft[i]);
+            i++;
+        }
+        else {
+            v.setElement(k, vectorRight[j]);
+            j++;
+        }
+        k++;
+    }
+
+    while (i < leftVector){
+        v.setElement(k, vectorLeft[i]);
+        i++;
+        k++;
+    }
+
+    while (j<rightVector){
+        v.setElement(k, vectorRight[j]);
+        j++;
+        k++;
+    }
+}
+
+void Screen::MergeSort(Vector& v, int left ,int right){
+    if (left < right){
+        int mid = left + (right - left) / 2;
+        MergeSort(v, left, mid);
+        MergeSort(v, mid+1, right);
+        Merge(v, left, mid, right);
+    }
+
 }
 
 
