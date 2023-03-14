@@ -15,16 +15,19 @@ class Vector{
         ~Vector();
         
         //access
-        bool const isOrdered() const;
+        bool isOrdered();
 
         //functions
         void fill(int i);
         void update();
         void render(sf::RenderTarget* target);
-        int Partition(int, int, sf::RenderWindow* target, sf::Event* ev);
-        void QuickSort(int, int, sf::RenderWindow* target, sf::Event* ev);
+        int Partition(int, int, sf::RenderWindow* target);
+        void QuickSort(int, int, sf::RenderWindow* target);
         int getSize();
         std::vector<sf::RectangleShape> &getVector();
+        sf::RectangleShape getElement(int);
         void print();
+        void swap(int, int);
+        void setColor(int, int);
 
 };

@@ -9,6 +9,9 @@
 #include <map>
 #include "Button.hpp"
 #include <thread>
+#include <iostream>
+
+enum sort_state{STATE_ZERO = 0, STATE_NONE, STATE_QUICK, STATE_BUBBLE};
 
 
 class Screen{
@@ -34,9 +37,11 @@ class Screen{
         sf::Font font;
 
         //control variables
+        unsigned short sort_state;
         bool ordered;
         bool quicksort;
         bool startQuick;
+        bool startBubble;
 
 
         //private functions
@@ -68,8 +73,9 @@ class Screen{
 
         void render();
 
-        void QuickSort(std::vector<sf::RectangleShape>&, int, int);
-        int Partition(std::vector<sf::RectangleShape>&, int, int);
+        void QuickSort(Vector&, int, int);
+        int Partition(Vector&, int, int);
+        void BubbleSort(Vector&, int);
 
 
 };

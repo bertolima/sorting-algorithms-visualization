@@ -1,5 +1,7 @@
 #include "Screen.hpp"
 
+
+
 //control variables
 void Screen::initVariables(){
     this->window = nullptr;
@@ -35,6 +37,11 @@ void Screen::initButtons(){
     this->buttons["QuickSort"] = new Button(this->window->getSize().x/2.f - 75.f, 100, 150, 50,
     &this->font, "QuickSort",
      sf::Color(70, 70, 70, 200), sf::Color(150, 150, 150, 200), sf::Color(20, 20, 20, 200));
+
+    this->buttons["BubbleSort"] = new Button(this->window->getSize().x/2.f - 75.f, 200, 150, 50,
+    &this->font, "BubbleSort",
+     sf::Color(70, 70, 70, 200), sf::Color(150, 150, 150, 200), sf::Color(20, 20, 20, 200));
+
 }
 
 //constructor and destructor
@@ -64,8 +71,6 @@ void Screen::pollEvent(){
             case sf::Event::KeyPressed:
                 if (this->ev.key.code == sf::Keyboard::Escape)
                     window->close();
-                if (this->ev.key.code == sf::Keyboard::Enter)
-                    this->startQuick = true;
                 break;
         }
     }
@@ -79,11 +84,18 @@ void Screen::updateMousePos(){
 }
 
 void Screen::updateVector(){
-    if (this->startQuick == true){
-        this->vector->QuickSort(0 , static_cast<int>(this->vector->getSize()-1), this->window, &this->ev);
-        this->startQuick = false;
-    }
-         
+    switch(this->sort_state){
+        case STATE_NONE:
+            break;
+        case STATE_QUICK:
+            this->QuickSort(*this->vector, 0 , static_cast<int>(this->vector->getSize()-1));
+            this->sort_state == STATE_NONE;
+            break;
+        case STATE_BUBBLE:
+            this->BubbleSort(*this->vector, static_cast<int>(this->vector->getSize()-1));
+            this->sort_state == STATE_NONE;
+            break;
+    }  
 }
 
 void Screen::updateButtons(){
@@ -92,31 +104,32 @@ void Screen::updateButtons(){
     }
 
     if(this->buttons["QuickSort"]->isPressed()){
-        this->quicksort = true;
+        this->sort_state = STATE_QUICK;
+    }
+    if(this->buttons["BubbleSort"]->isPressed()){
+        this->sort_state = STATE_BUBBLE;
     }
 }
 
 void Screen::update(){
-    std::thread t1 (&Screen::pollEvent, this);
-    std::thread t2 (&Screen::updateMousePos, this);
-    std::thread t3 (&Screen::updateButtons, this);
-    std::thread t4 (&Screen::updateVector, this);
-    t1.join();
-    t2.join();
-    t3.join();
-    t4.join();
+    this->pollEvent();
+    this->updateMousePos();
+    this->updateButtons();
+    this->updateVector();
 }
 
 
 void Screen::renderVector(){
-    if (this->quicksort == true){
+    if (this->sort_state != STATE_ZERO){
         this->vector->render(this->window);
     }
 }
 
 void Screen::renderButtons(){
-    if (quicksort == false)
-        this->buttons["QuickSort"]->render(this->window);
+    if (this->sort_state == STATE_ZERO)
+        for (auto &it : this->buttons){
+            it.second->render(this->window);
+        }
     
 }
 
@@ -131,6 +144,110 @@ void Screen::render(){
 
     //show new frames
     this->window->display();
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+int Screen::Partition(Vector &v, int low, int high){
+    if (v.isOrdered() == false){
+        bool ver = false;
+        while (ver == false){
+            this->pollEvent();
+            if (this->clock->getElapsedTime().asMilliseconds() > 250.f){
+                int i = low-1;
+                int pivot = v.getElement(high).getSize().y;
+                for (int j = low; j < high; j++){
+                    if (v.getElement(j).getSize().y <= pivot){
+                        i++;
+                        v.swap(i, j);
+                    }
+                }
+                v.swap(i+1, high);
+                v.setColor(i+1, 1);
+                v.setColor(high, 1);
+                this->vector->update();
+                this->render();
+                for(int i=0;i<v.getSize();i++){
+                    this->window->draw(v.getElement(i));
+                }
+                this->clock->restart();
+                ver = true;
+                v.setColor(i+1, 0);
+                v.setColor(high, 0);
+                return i+1;
+            }
+        }
+    }
+    
+    return -1;
+}
+
+
+void Screen::QuickSort(Vector &v, int low, int high){
+    if (low < high){
+        int p = Partition(v,low, high);
+        if (p != -1){
+            QuickSort(v, low, p-1);
+            QuickSort(v, p+1, high);
+        }
+    }
+}
+
+void Screen::BubbleSort(Vector &v, int size){
+    for (int i = 0; i < size;i++){
+        for (int j = 0; j < size-i;j++){
+            bool ver = false;
+            while (ver == false){
+                this->pollEvent();
+                if (this->clock->getElapsedTime().asMicroseconds() > 500.f){
+                        v.setColor(j, 1);
+                        v.setColor(j+1, 1);
+                        this->vector->update();
+                        this->render();
+                        for(int l=0;l<v.getSize();l++){
+                            this->window->draw(v.getElement(l));
+                        }
+                    if (v.getElement(j).getSize().y > v.getElement(j+1).getSize().y){
+                        v.swap(j, (j+1));
+
+                        this->vector->update();
+                        this->render();
+                        for(int l=0;l<v.getSize();l++){
+                            this->window->draw(v.getElement(l));
+                        }
+                        
+                    }
+                    v.setColor(j, 0);
+                    v.setColor(j+1, 0);
+                    this->clock->restart();
+                    ver = true;
+                }
+            }
+        }
+    }
 }
 
 
