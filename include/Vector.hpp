@@ -30,5 +30,6 @@ class Vector{
         void swap(int, int);
         void setColor(int, int);
         void setElement(int, sf::RectangleShape);
+        void reInit();
 
 };
