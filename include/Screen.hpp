@@ -32,16 +32,15 @@ class Screen{
 
         //buttons
         std::map<std::string, Button*> buttons;
+        std::map<std::string, Button*> control_buttons;
 
         //font
         sf::Font font;
 
         //control variables
         unsigned short sort_state;
-        bool ordered;
-        bool quicksort;
-        bool startQuick;
-        bool startBubble;
+        bool runningSort;
+
 
 
         //private functions

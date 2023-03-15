@@ -1,18 +1,13 @@
 #include "Screen.hpp"
 
-
-
 //control variables
 void Screen::initVariables(){
     this->window = nullptr;
     this->clock = new sf::Clock;
     this->font.loadFromFile("./include/fonts/The Hoca.ttf");
 
-    this->quicksort = false;
-    this->ordered = false;
-    this->startQuick = false;
+    this->runningSort = true;
 
-    
 }
 
 //init window
@@ -54,6 +49,10 @@ void Screen::initButtons(){
     &this->font, "HeapSort",
      sf::Color(70, 70, 70, 200), sf::Color(150, 150, 150, 200), sf::Color(20, 20, 20, 200));
 
+    this->control_buttons["RETURN"] = new Button(20.f, 20.f, 150, 50,
+    &this->font, "Return",
+     sf::Color(70, 70, 70, 200), sf::Color(150, 150, 150, 200), sf::Color(20, 20, 20, 200));
+
 }
 
 //constructor and destructor
@@ -79,17 +78,18 @@ void Screen::pollEvent(){
         switch(this->ev.type){
             case sf::Event::Closed:
                 this->window->close();
+                this->runningSort = false;
                 break;
             case sf::Event::KeyPressed:
                 if (this->ev.key.code == sf::Keyboard::Escape)
                     window->close();
+                    this->runningSort = false;
                 break;
         }
     }
 }
 
 //get mouse positions
-
 void Screen::updateMousePos(){
     this->mousePosWindow = sf::Mouse::getPosition();
     this->mousePosFloat = this->window->mapPixelToCoords(sf::Mouse::getPosition(*this->window));
@@ -101,16 +101,15 @@ void Screen::updateVector(){
         this->vector->update();
             for(int l=0;l<this->vector->getSize();l++){
                     this->window->draw(this->vector->getElement(l));
-            }
-                        
+            }                     
             break;
         case STATE_QUICK:
             this->QuickSort(*this->vector,0 , static_cast<int>(this->vector->getSize()-1));
-            this->sort_state == STATE_NONE;
+            this->sort_state = STATE_NONE;
             break;
         case STATE_BUBBLE:
             this->BubbleSort(*this->vector, static_cast<int>(this->vector->getSize()-1));
-            this->sort_state == STATE_NONE;
+            this->sort_state = STATE_NONE;
             break;
         case STATE_MERGE:
             this->MergeSort(*this->vector,0 , static_cast<int>(this->vector->getSize()-1));
@@ -122,7 +121,6 @@ void Screen::updateVector(){
             break;
         case STATE_HEAP:
             this->HeapSort(*this->vector, static_cast<int>(this->vector->getSize()));
-            this->vector->print();
             this->sort_state = STATE_NONE;
             break;
     }  
@@ -130,6 +128,10 @@ void Screen::updateVector(){
 
 void Screen::updateButtons(){
     for (auto &it : this->buttons){
+        it.second->update(this->mousePosFloat);
+    }
+
+    for (auto &it : this->control_buttons){
         it.second->update(this->mousePosFloat);
     }
 
@@ -151,6 +153,12 @@ void Screen::updateButtons(){
     if(this->buttons["HeapSort"]->isPressed()){
         this->sort_state = STATE_HEAP;
     }
+
+    if(this->control_buttons["RETURN"]->isPressed()){
+        this->sort_state = STATE_ZERO;
+        this->vector->reInit();
+        this->initVector();
+    }
 }
 
 void Screen::update(){
@@ -159,7 +167,6 @@ void Screen::update(){
     this->updateButtons();
     this->updateVector();
 }
-
 
 void Screen::renderVector(){
     if (this->sort_state != STATE_ZERO){
@@ -172,14 +179,17 @@ void Screen::renderButtons(){
         for (auto &it : this->buttons){
             it.second->render(this->window);
         }
-    
+    std::cout << this->vector->isOrdered() << std::endl;
+    if (this->sort_state == STATE_NONE && this->vector->isOrdered() == true){
+        for (auto &it : this->control_buttons){
+            it.second->render(this->window);
+        }
+    } 
 }
-
 
 void Screen::render(){
     //clear old frames
     this->window->clear();
-
 
     this->renderButtons();
     this->renderVector();
@@ -189,36 +199,13 @@ void Screen::render(){
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 int Screen::Partition(Vector &v, int low, int high){
-    if (v.isOrdered() == false){
-        bool ver = false;
+    bool ver = false;   
+    if (v.isOrdered() == true)
+        ver = true;
         while (ver == false){
             this->pollEvent();
-            if (this->clock->getElapsedTime().asMilliseconds() > 250.f){
+            if (this->clock->getElapsedTime().asMilliseconds() > 10.f){
                 int i = low-1;
                 int pivot = v.getElement(high).getSize().y;
                 for (int j = low; j < high; j++){
@@ -232,9 +219,6 @@ int Screen::Partition(Vector &v, int low, int high){
                 v.setColor(high, 1);
                 this->vector->update();
                 this->render();
-                for(int i=0;i<v.getSize();i++){
-                    this->window->draw(v.getElement(i));
-                }
                 this->clock->restart();
                 ver = true;
                 v.setColor(i+1, 0);
@@ -242,36 +226,44 @@ int Screen::Partition(Vector &v, int low, int high){
                 return i+1;
             }
         }
-    }
-    
     return -1;
 }
 
-
 void Screen::QuickSort(Vector &v, int low, int high){
-    if (low < high){
-        int p = Partition(v,low, high);
-        if (p != -1){
-            QuickSort(v, low, p-1);
-            QuickSort(v, p+1, high);
+    if (this->runningSort == true){
+        if (v.isOrdered() == false){
+            if (low < high){
+                int p = Partition(v,low, high);
+                if (p != -1){
+                    QuickSort(v, low, p-1);
+                    QuickSort(v, p+1, high);
+                }
+            }
         }
     }
 }
 
 void Screen::BubbleSort(Vector &v, int size){
     for (int i = 0; i < size;i++){
+        if (this->vector->isOrdered() == true)
+            break;
+        if (this->runningSort == false)
+            break;
         for (int j = 0; j < size-i;j++){
+            if (this->runningSort == false)
+                break;
             bool ver = false;
+            if (this->vector->isOrdered() == true)
+                break;
             while (ver == false){
                 this->pollEvent();
-                if (this->clock->getElapsedTime().asMicroseconds() > 500.f){
+                
+                std::cout << this->vector->isOrdered() << std::endl;
+                if (this->clock->getElapsedTime().asMicroseconds() > 10.f){
                         v.setColor(j, 1);
                         v.setColor(j+1, 1);
                         this->vector->update();
                         this->render();
-                        for(int l=0;l<v.getSize();l++){
-                            this->window->draw(v.getElement(l));
-                        }
                     if (v.getElement(j).getSize().y > v.getElement(j+1).getSize().y){
                         v.swap(j, (j+1));
 
@@ -293,64 +285,67 @@ void Screen::BubbleSort(Vector &v, int size){
 }
 
 void Screen::Merge(Vector& v, int left, int mid, int right){
-    if (v.isOrdered() == false){
-        bool ver = false;
-        while (ver == false){
-            this->pollEvent();
-            if (this->clock->getElapsedTime().asMilliseconds() > 100.f){
+    if (this->runningSort == true){
+                
+        if (v.isOrdered() == false){
+            bool ver = false;
+            while (ver == false){
+                this->pollEvent();
+                if (this->clock->getElapsedTime().asMilliseconds() > 100.f){
 
-                std::vector<sf::RectangleShape> vectorLeft;
-                std::vector<sf::RectangleShape> vectorRight;
+                    std::vector<sf::RectangleShape> vectorLeft;
+                    std::vector<sf::RectangleShape> vectorRight;
 
-                auto const leftVector = mid - left + 1;
-                auto const rightVector = right - mid;
+                    auto const leftVector = mid - left + 1;
+                    auto const rightVector = right - mid;
 
-                for (int i = 0; i < leftVector; i++){
-                    vectorLeft.push_back(v.getElement(left + i));
-                }
+                    for (int i = 0; i < leftVector; i++){
+                        vectorLeft.push_back(v.getElement(left + i));
+                    }
 
-                for (int j = 0; j <rightVector; j++){
-                    vectorRight.push_back(v.getElement(mid + 1 + j));
-                }
+                    for (int j = 0; j <rightVector; j++){
+                        vectorRight.push_back(v.getElement(mid + 1 + j));
+                    }
 
-                int i=0, j=0, k = left;
+                    int i=0, j=0, k = left;
 
-                while(i < leftVector && j < rightVector){
-                    if(vectorLeft[i].getSize().y <= vectorRight[j].getSize().y){
+                    while(i < leftVector && j < rightVector){
+                        if(vectorLeft[i].getSize().y <= vectorRight[j].getSize().y){
+                            v.setElement(k, vectorLeft[i]);
+                            i++;
+                        }
+                        else {
+                            v.setElement(k, vectorRight[j]);
+                            j++;
+                            
+                        }
+                        v.setColor(k, 2);
+                        k++;
+
+                    }
+                    
+
+                    while (i < leftVector){
                         v.setElement(k, vectorLeft[i]);
                         i++;
+                        k++;
                     }
-                    else {
+
+                    while (j<rightVector){
                         v.setElement(k, vectorRight[j]);
                         j++;
+                        v.setColor(k, 2);
+                        k++;
                         
                     }
-                    v.setColor(k, 2);
-                    k++;
-
+                    this->vector->update();
+                    this->render();
+                    for(int l=0;l<v.getSize();l++){
+                            this->window->draw(v.getElement(l));
+                    }
+                    ver = true;
+                    this->clock->restart();
                 }
-                
-
-                while (i < leftVector){
-                    v.setElement(k, vectorLeft[i]);
-                    i++;
-                    k++;
-                }
-
-                while (j<rightVector){
-                    v.setElement(k, vectorRight[j]);
-                    j++;
-                    v.setColor(k, 2);
-                    k++;
-                    
-                }
-                this->vector->update();
-                this->render();
-                for(int l=0;l<v.getSize();l++){
-                        this->window->draw(v.getElement(l));
-                }
-                ver = true;
-                this->clock->restart();
             }
         }
     }
@@ -370,8 +365,12 @@ void Screen::SelectionSort(Vector&v , int size){
 
     int min;
     for (int i=0;i<size;i++){
+        if (this->runningSort == false)
+                break;
         min = i;
         for (int j=i+1;j<size+1;j++){
+            if (this->runningSort == false)
+                break;
             bool ver = false;
             while (ver == false){
                 this->pollEvent();
@@ -435,10 +434,14 @@ void Screen::Heapify(Vector& v, int size, int i){
 
 void Screen::HeapSort(Vector&v, int size){
     for (int i = size/2-1;i>=0;i--){
+        if (this->runningSort == false)
+            break;
         Heapify(v, size, i);
     }
 
     for (int i = size -1;i>0;i--){
+        if (this->runningSort == false)
+            break;
         v.swap(0, i);
         Heapify(v, i, 0);
     }
