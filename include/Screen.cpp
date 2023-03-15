@@ -34,16 +34,24 @@ void::Screen::initVector(){
 }
 
 void Screen::initButtons(){
-    this->buttons["QuickSort"] = new Button(this->window->getSize().x/2.f - 75.f, 100, 150, 50,
+    this->buttons["QuickSort"] = new Button(this->window->getSize().x/2.f - 75.f, 50, 150, 50,
     &this->font, "QuickSort",
      sf::Color(70, 70, 70, 200), sf::Color(150, 150, 150, 200), sf::Color(20, 20, 20, 200));
 
-    this->buttons["BubbleSort"] = new Button(this->window->getSize().x/2.f - 75.f, 200, 150, 50,
+    this->buttons["BubbleSort"] = new Button(this->window->getSize().x/2.f - 75.f, 150, 150, 50,
     &this->font, "BubbleSort",
      sf::Color(70, 70, 70, 200), sf::Color(150, 150, 150, 200), sf::Color(20, 20, 20, 200));
     
-    this->buttons["MergeSort"] = new Button(this->window->getSize().x/2.f - 75.f, 300, 150, 50,
+    this->buttons["MergeSort"] = new Button(this->window->getSize().x/2.f - 75.f, 250, 150, 50,
     &this->font, "MergeSort",
+     sf::Color(70, 70, 70, 200), sf::Color(150, 150, 150, 200), sf::Color(20, 20, 20, 200));
+
+    this->buttons["SelectionSort"] = new Button(this->window->getSize().x/2.f - 75.f, 350, 150, 50,
+    &this->font, "SelectionSort",
+     sf::Color(70, 70, 70, 200), sf::Color(150, 150, 150, 200), sf::Color(20, 20, 20, 200));
+
+    this->buttons["HeapSort"] = new Button(this->window->getSize().x/2.f - 75.f, 450, 150, 50,
+    &this->font, "HeapSort",
      sf::Color(70, 70, 70, 200), sf::Color(150, 150, 150, 200), sf::Color(20, 20, 20, 200));
 
 }
@@ -90,6 +98,11 @@ void Screen::updateMousePos(){
 void Screen::updateVector(){
     switch(this->sort_state){
         case STATE_NONE:
+        this->vector->update();
+            for(int l=0;l<this->vector->getSize();l++){
+                    this->window->draw(this->vector->getElement(l));
+            }
+                        
             break;
         case STATE_QUICK:
             this->QuickSort(*this->vector,0 , static_cast<int>(this->vector->getSize()-1));
@@ -101,6 +114,14 @@ void Screen::updateVector(){
             break;
         case STATE_MERGE:
             this->MergeSort(*this->vector,0 , static_cast<int>(this->vector->getSize()-1));
+            this->sort_state = STATE_NONE;
+            break;
+        case STATE_SELECTION:
+            this->SelectionSort(*this->vector, static_cast<int>(this->vector->getSize()-1));
+            this->sort_state = STATE_NONE;
+            break;
+        case STATE_HEAP:
+            this->HeapSort(*this->vector, static_cast<int>(this->vector->getSize()));
             this->vector->print();
             this->sort_state = STATE_NONE;
             break;
@@ -121,6 +142,14 @@ void Screen::updateButtons(){
 
     if(this->buttons["MergeSort"]->isPressed()){
         this->sort_state = STATE_MERGE;
+    }
+
+    if(this->buttons["SelectionSort"]->isPressed()){
+        this->sort_state = STATE_SELECTION;
+    }
+
+    if(this->buttons["HeapSort"]->isPressed()){
+        this->sort_state = STATE_HEAP;
     }
 }
 
@@ -264,44 +293,66 @@ void Screen::BubbleSort(Vector &v, int size){
 }
 
 void Screen::Merge(Vector& v, int left, int mid, int right){
-    std::vector<sf::RectangleShape> vectorLeft;
-    std::vector<sf::RectangleShape> vectorRight;
+    if (v.isOrdered() == false){
+        bool ver = false;
+        while (ver == false){
+            this->pollEvent();
+            if (this->clock->getElapsedTime().asMilliseconds() > 100.f){
 
-    auto const leftVector = mid - left + 1;
-    auto const rightVector = right - mid;
+                std::vector<sf::RectangleShape> vectorLeft;
+                std::vector<sf::RectangleShape> vectorRight;
 
-    for (int i = 0; i < leftVector; i++){
-        vectorLeft.push_back(v.getElement(left + i));
-    }
+                auto const leftVector = mid - left + 1;
+                auto const rightVector = right - mid;
 
-    for (int j = 0; j <rightVector; j++){
-        vectorRight.push_back(v.getElement(mid + 1 + j));
-    }
+                for (int i = 0; i < leftVector; i++){
+                    vectorLeft.push_back(v.getElement(left + i));
+                }
 
-    int i=0, j=0, k = left;
+                for (int j = 0; j <rightVector; j++){
+                    vectorRight.push_back(v.getElement(mid + 1 + j));
+                }
 
-    while(i < leftVector && j < rightVector){
-        if(vectorLeft[i].getSize().y <= vectorRight[j].getSize().y){
-            v.setElement(k, vectorLeft[i]);
-            i++;
+                int i=0, j=0, k = left;
+
+                while(i < leftVector && j < rightVector){
+                    if(vectorLeft[i].getSize().y <= vectorRight[j].getSize().y){
+                        v.setElement(k, vectorLeft[i]);
+                        i++;
+                    }
+                    else {
+                        v.setElement(k, vectorRight[j]);
+                        j++;
+                        
+                    }
+                    v.setColor(k, 2);
+                    k++;
+
+                }
+                
+
+                while (i < leftVector){
+                    v.setElement(k, vectorLeft[i]);
+                    i++;
+                    k++;
+                }
+
+                while (j<rightVector){
+                    v.setElement(k, vectorRight[j]);
+                    j++;
+                    v.setColor(k, 2);
+                    k++;
+                    
+                }
+                this->vector->update();
+                this->render();
+                for(int l=0;l<v.getSize();l++){
+                        this->window->draw(v.getElement(l));
+                }
+                ver = true;
+                this->clock->restart();
+            }
         }
-        else {
-            v.setElement(k, vectorRight[j]);
-            j++;
-        }
-        k++;
-    }
-
-    while (i < leftVector){
-        v.setElement(k, vectorLeft[i]);
-        i++;
-        k++;
-    }
-
-    while (j<rightVector){
-        v.setElement(k, vectorRight[j]);
-        j++;
-        k++;
     }
 }
 
@@ -313,6 +364,84 @@ void Screen::MergeSort(Vector& v, int left ,int right){
         Merge(v, left, mid, right);
     }
 
+}
+
+void Screen::SelectionSort(Vector&v , int size){
+
+    int min;
+    for (int i=0;i<size;i++){
+        min = i;
+        for (int j=i+1;j<size+1;j++){
+            bool ver = false;
+            while (ver == false){
+                this->pollEvent();
+                if (this->clock->getElapsedTime().asMicroseconds() > 500.f){
+                        
+                        v.setColor(i, 1);
+                        if (v.getElement(j).getSize().y < v.getElement(min).getSize().y)
+                            min = j;
+                            v.setColor(j, 1);
+                        this->vector->update();
+                        this->render();
+                        for(int l=0;l<v.getSize();l++){
+                            this->window->draw(v.getElement(l));
+                        }
+                        v.setColor(i, 0);
+                        v.setColor(j, 0);
+                        this->clock->restart();
+                        ver = true;
+                }
+            }
+        }
+        if (min != i)
+            v.swap(min, i);
+    }
+
+}
+
+void Screen::Heapify(Vector& v, int size, int i){
+        bool ver = false;
+        while (ver == false){
+            this->pollEvent();
+            if (this->clock->getElapsedTime().asMilliseconds() > 10.f){
+                
+                
+                ver = true;
+                this->clock->restart();
+                int largest = i;
+
+                int left = 2*i +1;
+                int right = 2*i +2;
+
+                if (left < size && v.getElement(left).getSize().y > v.getElement(largest).getSize().y)
+                    largest = left;
+                if (right < size && v.getElement(right).getSize().y > v.getElement(largest).getSize().y)
+                    largest = right;
+                v.setColor(largest, 1);
+                v.setColor(i, 1);
+                if (largest != i){
+                    v.swap(i, largest);
+                    Heapify(v, size, largest);
+                }
+                
+
+                this->vector->update();
+                this->render();
+                v.setColor(i, 0);
+                v.setColor(largest, 0);
+            }
+        }
+}
+
+void Screen::HeapSort(Vector&v, int size){
+    for (int i = size/2-1;i>=0;i--){
+        Heapify(v, size, i);
+    }
+
+    for (int i = size -1;i>0;i--){
+        v.swap(0, i);
+        Heapify(v, i, 0);
+    }
 }
 
 

@@ -117,6 +117,9 @@ void Vector::setColor(int i, int j){
         case 1:
             this->arr[i].setFillColor(sf::Color::Red);
             break;
+        case 2:
+        this->arr[i].setOutlineColor(sf::Color::Blue);
+        this->arr[i].setOutlineThickness(1);
     }
     
 }
